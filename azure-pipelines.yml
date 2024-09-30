@@ -11,6 +11,7 @@ stages:
     steps:
     - task: CmdLine@2
       displayName: 'Run without sudo'
+      condition: always()
       inputs:
         script: |
           apt-get update
