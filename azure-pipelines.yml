@@ -1,25 +1,37 @@
 trigger:
   branches:
     include:
-    
+    - main
 stages:
 - stage: __default
   jobs:
   - job: Job
     pool:
       vmImage: ubuntu-latest
+    container:
+      image: "ubuntu:latest"
+      options: "--user root --privileged"
     steps:
     - task: CmdLine@2
-      displayName: 'Run without sudo'
-      condition: always()
+      displayName: 'Run a one-line script'
       inputs:
-        script: |
-          apt-get update
-          apt-get install doxygen
+        script: echo Hello, world!
     - task: CmdLine@2
-      displayName: 'Run with sudo'
-      condition: always()
+      displayName: "Run with sudo commands"
+      inputs:
+        script: "sudo apt-get install doxygen -y\nsudo apt update \n"
+    - task: CmdLine@2
+      displayName: "Run without sudo commands"
       inputs:
         script: |
-          sudo apt-get update
-          sudo apt-get install doxygen
+          echo "user name"
+          whoami
+          echo "user groups"
+          groups
+          echo "Groups and its permissions"
+          cat /etc/group
+          echo "User and permissions"
+          cat /etc/passwd
+          apt-get update
+          apt-get install git -y
+
