@@ -1,5 +1,5 @@
 # Get all projects in the organization
-$OrganizationName = "YOUR_ORG_NAME"
+$OrganizationName = "v-peramesh0330"
  
 # Set your personal access token (PAT)
 $AzureDevOpsPAT = "FULL_ACCESS_PAT_TOKEN"
