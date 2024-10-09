@@ -19,19 +19,19 @@ stages:
     - task: CmdLine@2
       displayName: "Run with sudo commands"
       inputs:
-        script: "sudo apt-get install doxygen -y\nsudo apt update \n"
-    - task: CmdLine@2
-      displayName: "Run without sudo commands"
-      inputs:
-        script: |
-          echo "user name"
-          whoami
-          echo "user groups"
-          groups
-          echo "Groups and its permissions"
-          cat /etc/group
-          echo "User and permissions"
-          cat /etc/passwd
-          apt-get update
-          apt-get install git -y
+        script: "sudo apt-get install doxygen -y\nsudo apt update\n"
+    # - task: CmdLine@2
+    #   displayName: "Run without sudo commands"
+    #   inputs:
+    #     script: |
+    #       echo "user name"
+    #       whoami
+    #       echo "user groups"
+    #       groups
+    #       echo "Groups and its permissions"
+    #       cat /etc/group
+    #       echo "User and permissions"
+    #       cat /etc/passwd
+    #       apt-get update
+    #       apt-get install git -y
 
