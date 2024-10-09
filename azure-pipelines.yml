@@ -1,59 +1,37 @@
-# Get all projects in the organization
-$OrganizationName = "v-peramesh0330"
- 
-# Set your personal access token (PAT)
-$AzureDevOpsPAT = "FULL_ACCESS_PAT_TOKEN"
- - task: PowerShell@2
-   inputs:
-     targetType: 'inline'
-     script: |
-       # Write your PowerShell commands here.
-       
-       Write-Host "Hello World"
-$AzureDevOpsAuthenicationHeader = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($AzureDevOpsPAT)")) }
- 
-$apiEndpoint = "https://dev.azure.com/$($OrganizationName)/_apis/"
-$projectsResponse = Invoke-RestMethod -Uri ($apiEndpoint + "projects?api-version=7.1-preview.4") -Method Get -Headers $AzureDevOpsAuthenicationHeader
-$projects = $projectsResponse.value
- 
-# Loop through each project and get all definitions
-$definitions = @()
-foreach ($project in $projects) {
-   $projectName = $project.name
-   #Write-Host "Getting definitions for project $projectName..."
-   $defapiEndpoint = "https://dev.azure.com/$($OrganizationName)/$($projectName)/_apis/"
-   $definitionsResponse = Invoke-RestMethod -Uri ($defapiEndpoint + "build/definitions?api-version=7.1-preview.7") -Method Get -Headers $AzureDevOpsAuthenicationHeader
-   $definitions += $definitionsResponse.value
-}
+trigger:
+  branches:
+    include:
+    - main
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      vmImage: ubuntu-latest
+    container:
+      image: "ubuntu:latest"
+      options: "--user root --privileged"
+    steps:
+    - task: CmdLine@2
+      displayName: 'Run a one-line script'
+      inputs:
+        script: echo Hello, world!
+    - task: CmdLine@2
+      displayName: "Run with sudo commands"
+      inputs:
+        script: "sudo apt-get install doxygen -y\nsudo apt update \n"
+    - task: CmdLine@2
+      displayName: "Run without sudo commands"
+      inputs:
+        script: |
+          echo "user name"
+          whoami
+          echo "user groups"
+          groups
+          echo "Groups and its permissions"
+          cat /etc/group
+          echo "User and permissions"
+          cat /etc/passwd
+          apt-get update
+          apt-get install git -y
 
-# Sort the definitions in ascending order by name
-$definitions = $definitions | Sort-Object -Property name
-
-# Loop through each definition and get related lease IDs
-$definitionLeases = @()
-foreach ($definition in $definitions) {
-
-   $definitionId = $definition.id
-   $projectName = $definition.project.name
-   $uri = "https://dev.azure.com/$($OrganizationName)/$($projectName)/_apis/pipelines/$($definitionId)/runs?api-version=7.1"
- 
-   $response = Invoke-RestMethod -Uri $uri -Method get -Headers $AzureDevOpsAuthenicationHeader 
-   $filteredResponse = $response.value
-
-   foreach ($fs in $filteredResponse) {
-  
-         $definitionLeases += [PSCustomObject]@{
-             Project = $projectName
-             PipelineName = $definition.name
-             DefinitionId = $definitionId
-             RunId = $fs.id
-             CreatedDate = $fs.createdDate
-             FinishedDate = $fs.finishedDate
-             Result = $fs.result
-             #Url = $definition.url
-         }
-   }
-
-}
-
-$definitionLeases | Where-Object { $_.CreatedDate -ge '2024-10-03T20:00:00' -and $_.CreatedDate -le '2024-10-07T19:00:00' } | Export-Csv -Path Downloads/BuildInformation.csv -NoTypeInformation -Append
