@@ -19,7 +19,9 @@ stages:
     - task: CmdLine@2
       displayName: "Run with sudo commands"
       inputs:
-        script: "sudo apt-get install doxygen -y\nsudo apt update\n"
+        script: |
+          apt-get install doxygen -y
+          apt update
     # - task: CmdLine@2
     #   displayName: "Run without sudo commands"
     #   inputs:
