@@ -55,10 +55,10 @@ stages:
               $FileShareName = "$(fileshareName)"
               $storageAccountConString = "$(storageAccountConString)"
               $localFilePath = - task: AzureCLI@2
-  inputs:
-    scriptType:'pscore'
-    scriptLocation: 'scriptPath'
-    scriptPath:'"$(Build.SourcesDirectory)/config/${{ parameters.env }}/customerTenants.json"'
+  # inputs:
+  #   scriptType:'pscore'
+  #   scriptLocation: 'scriptPath'
+  #   scriptPath:'"$(Build.SourcesDirectory)/config/${{ parameters.env }}/customerTenants.json"'
 
               try {
               $ctx = New-AzStorageContext -ConnectionString $storageAccountConString
