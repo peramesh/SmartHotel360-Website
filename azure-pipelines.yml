@@ -1,39 +1,86 @@
-trigger:
-  branches:
-    include:
-    - main
-stages:
-- stage: __default
-  jobs:
-  - job: Job
-    pool:
-      vmImage: ubuntu-latest
-    container:
-      image: "ubuntu:latest"
-      options: "--user root --privileged"
-    steps:
-    - task: CmdLine@2
-      displayName: 'Run a one-line script'
-      inputs:
-        script: echo Hello, world!
-    - task: CmdLine@2
-      displayName: "Run with sudo commands"
-      inputs:
-        script: |
-          apt-get install doxygen -y
-          apt update
-    # - task: CmdLine@2
-    #   displayName: "Run without sudo commands"
-    #   inputs:
-    #     script: |
-    #       echo "user name"
-    #       whoami
-    #       echo "user groups"
-    #       groups
-    #       echo "Groups and its permissions"
-    #       cat /etc/group
-    #       echo "User and permissions"
-    #       cat /etc/passwd
-    #       apt-get update
-    #       apt-get install git -y
+trigger: none
 
+parameters:
+  - name: env
+    displayName: Enviroment
+    type: string
+    default: dev
+    values:
+      - dev
+      - prd
+
+variables:
+  - group: "${{ parameters.env }}-secretmon-vars"
+  - group: "${{ parameters.env }}-secretmon-vars"
+
+
+pool: "Azure Pipelines"
+
+stages:
+  - stage: Upload_customerTenants_File
+    jobs:
+      - job: Upload_customerTenants_File
+        displayName: "Upload customerTenants.json file to storage account"
+        steps:
+#        - task: Bash@3
+#          name: InstallAzureCLI
+#          displayName: 'Install AZ CLI 2.64.0 as workaround'
+#          inputs:
+#            targetType: 'inline'
+#            script: |
+#              pip install --force-reinstall azure-cli==2.64.0
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'csp-snt-cloudteam-dev-01'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              $apiUrl = "https://api.ipify.org";
+              $webClient = New-Object Net.WebClient;
+              $externalIpAddress = $webClient.DownloadString($apiUrl);
+               
+              echo "Build agent  IP address is " $externalIpAddress
+              echo "##vso[task.setvariable variable=AGENT_IP;]$externalIpAddress "
+              az storage account network-rule add --resource-group dev-secretmon-rg --account-name devstgw5bddliwcw5ao  --ip-address $externalIpAddress
+        - task: AzurePowerShell@5
+          inputs:
+            azureSubscription: $(serviceConnection)
+            ScriptType: 'InlineScript'
+            Inline: |
+              Import-Module -Name Az.Storage -Force
+
+              #Write-Host "##[command]Setting Variables for use in the script"
+              $ResourceGroupName = "$(resourceGroupName)"
+              $StorageAccountName = "$(storageAccountName)"
+              $FileShareName = "$(fileshareName)"
+              $storageAccountConString = "$(storageAccountConString)"
+              $localFilePath = - task: AzureCLI@2
+  inputs:
+    scriptType: 'pscore'
+    scriptLocation: 'scriptPath'
+    scriptPath: '"$(Build.SourcesDirectory)/config/${{ parameters.env }}/customerTenants.json"'
+
+              try {
+              $ctx = New-AzStorageContext -ConnectionString $storageAccountConString
+              } catch {
+              Write-Error "failed running New-AzStorageContext: $_"
+              exit 1
+              }
+
+              #Write-Host "##[command]Upload customerTenants.json to file share"
+              try {
+              Set-AzStorageFileContent -Source $localFilePath -ShareName "test" -Path '/' -Context $ctx
+              } catch {
+              Write-Error "failed upload file to storage account: $_"
+              exit 1
+              }
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: 'csp-snt-cloudteam-dev-01'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              $BUILDIP=echo $(AGENT_IP)
+              echo $BUILDIP
+              sleep 10
+              az storage account network-rule remove --resource-group dev-secretmon-rg  --account-name  devstgw5bddliwcw5ao    --ip-address  $BUILDIP
