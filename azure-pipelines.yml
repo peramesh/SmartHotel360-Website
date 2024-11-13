@@ -58,7 +58,7 @@ stages:
   inputs:
     scriptType:'pscore'
     scriptLocation: 'scriptPath'
-    scriptPath: '"$(Build.SourcesDirectory)/config/${{ parameters.env }}/customerTenants.json"'
+    scriptPath:'"$(Build.SourcesDirectory)/config/${{ parameters.env }}/customerTenants.json"'
 
               try {
               $ctx = New-AzStorageContext -ConnectionString $storageAccountConString
