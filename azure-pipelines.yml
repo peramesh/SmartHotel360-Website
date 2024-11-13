@@ -56,7 +56,7 @@ stages:
               $storageAccountConString = "$(storageAccountConString)"
               $localFilePath = - task: AzureCLI@2
   inputs:
-    scriptType: 'pscore'
+    scriptType:'pscore'
     scriptLocation: 'scriptPath'
     scriptPath: '"$(Build.SourcesDirectory)/config/${{ parameters.env }}/customerTenants.json"'
 
